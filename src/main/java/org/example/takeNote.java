@@ -149,7 +149,9 @@ public class takeNote extends ListenerAdapter {
 
                     case "c":
                         note.clear();
+                        images.delete(0, images.length());
                         e.getChannel().sendMessage("`Note cleared!`").queue();
+                        
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {
