@@ -11,9 +11,8 @@ public class takeNote extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent e){
-
         String args[] = e.getMessage().getContentRaw().split(" ");
-
+            //all the more commands
             if(args[0].equalsIgnoreCase("n")){
                 switch (args[1]) {
                     case "h":
