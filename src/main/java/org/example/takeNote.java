@@ -7,23 +7,26 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 public class takeNote extends ListenerAdapter {
     static EmbedBuilder note = new EmbedBuilder();
     static StringBuilder images = new StringBuilder();
+    StringBuilder titleBuilder = null;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent e){
 
         String args[] = e.getMessage().getContentRaw().split(" ");
-                switch (args[0]) {
+
+            if(args[0].equalsIgnoreCase("n")){
+                switch (args[1]) {
                     case "h":
                         //help
                         e.getChannel().sendMessage(
-                         "`t` **topic** \n" +
-                                "`q` **keyword/questions** \n" +
-                                "`n` **notes** \n" +
-                                "`s` **summary** \n" +
-                                "`a` **attachment** \n" +
-                                "`l` ** attachment link** \n" +
-                                "`./` **to show the file** \n" +
-                                 "`c` **to clear current note**").queue();
+                                "`t` **topic** \n" +
+                                        "`q` **keyword/questions** \n" +
+                                        "`n` **notes** \n" +
+                                        "`s` **summary** \n" +
+                                        "`a` **attachment** \n" +
+                                        "`l` ** attachment link** \n" +
+                                        "`./` **to show the file** \n" +
+                                        "`c` **to clear current note**").queue();
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {
@@ -34,7 +37,7 @@ public class takeNote extends ListenerAdapter {
 
                     case "t":
                         //setting up title
-                        StringBuilder titleBuilder = new StringBuilder();
+                        titleBuilder = new StringBuilder();
                         for (int i = 1; i < args.length; i++) {
                             titleBuilder.append(args[i] + " ");
                         }
@@ -159,6 +162,8 @@ public class takeNote extends ListenerAdapter {
                         e.getMessage().delete().queue();
                         break;
                 }
+            }
+
 
 
         try{
