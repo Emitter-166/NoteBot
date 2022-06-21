@@ -9,6 +9,7 @@ public class Main {
     public static void main(String[] args) throws LoginException {
         JDA jda = JDABuilder.createLight(System.getenv("token"))
                 .addEventListeners(new takeNote())
+                .addEventListeners(new Database())
                 .build();
     }
 }

@@ -3,11 +3,20 @@ package org.example;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.bson.Document;
+
+import javax.xml.crypto.Data;
+import java.util.Arrays;
 
 public class takeNote extends ListenerAdapter {
     static EmbedBuilder note = new EmbedBuilder();
     static StringBuilder images = new StringBuilder();
     StringBuilder titleBuilder = null;
+    StringBuilder authorBuilder = null;
+    StringBuilder kqBuilder = null;
+    StringBuilder notesBuilder = null;
+    StringBuilder summaryBuilder = null;
+    StringBuilder linkBuilder = null;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent e){
@@ -24,8 +33,10 @@ public class takeNote extends ListenerAdapter {
                                         "`s` **summary** \n" +
                                         "`a` **attachment** \n" +
                                         "`l` ** attachment link** \n" +
+                                        "`i` **sets id of the note**" +
                                         "`./` **to show the file** \n" +
-                                        "`c` **to clear current note**").queue();
+                                        "`c` **to clear current note** \n" +
+                                        "`notes` **to see all the notes**").queue();
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {
@@ -34,10 +45,27 @@ public class takeNote extends ListenerAdapter {
                         e.getMessage().delete().queue();
                         break;
 
+                    case "i":
+                        //setting id
+                        authorBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
+                            authorBuilder.append(args[i] + " ");
+                        }
+                        note.setAuthor(authorBuilder.toString());
+                        e.getChannel().sendMessage("`id set!`").queue();
+                        e.getMessage().delete().queue();
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        e.getMessage().delete().queue();
+                        break;
+                    
                     case "t":
                         //setting up title
                         titleBuilder = new StringBuilder();
-                        for (int i = 1; i < args.length; i++) {
+                        for (int i = 2; i < args.length; i++) {
                             titleBuilder.append(args[i] + " ");
                         }
                         note.setTitle(titleBuilder.toString());
@@ -53,8 +81,8 @@ public class takeNote extends ListenerAdapter {
 
                     case "q":
                         //setting up keywords and questions
-                        StringBuilder kqBuilder = new StringBuilder();
-                        for (int i = 1; i < args.length; i++) {
+                        kqBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
                             kqBuilder.append(args[i] + " ");
                         }
                         note.addField("Questions/Keywords: ", String.format("```%s```", kqBuilder), false);
@@ -70,8 +98,8 @@ public class takeNote extends ListenerAdapter {
 
                     case "n":
                         //setting up notes
-                        StringBuilder notesBuilder = new StringBuilder();
-                        for (int i = 1; i < args.length; i++) {
+                        notesBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
                             notesBuilder.append(args[i]+ " ");
                         }
                         note.addField("Notes: ", String.format("```%s```", notesBuilder), false);
@@ -87,8 +115,8 @@ public class takeNote extends ListenerAdapter {
 
                     case "s":
                         //setting up summary
-                        StringBuilder summaryBuilder = new StringBuilder();
-                        for (int i = 1; i < args.length; i++) {
+                        summaryBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
                             summaryBuilder.append(args[i]+ " ");
                         }
                         note.addField("Summary: ", String.format("```%s```", summaryBuilder), false);
@@ -108,7 +136,7 @@ public class takeNote extends ListenerAdapter {
                         e.getMessage().getAttachments().forEach(attachment ->  images.append(attachment.getUrl() + " "));
 
                         //links
-                        for (int i = 1; i < args.length; i++) {
+                        for (int i = 2; i < args.length; i++) {
                             images.append(args[i]+ " ");
                         }
                         e.getChannel().sendMessage("`Attachment set!`").queue();
@@ -122,8 +150,8 @@ public class takeNote extends ListenerAdapter {
 
                     case "l":
                         //setting up links
-                        StringBuilder linkBuilder = new StringBuilder();
-                        for (int i = 1; i < args.length; i++) {
+                        linkBuilder = new StringBuilder();
+                        for (int i = 2; i < args.length; i++) {
                             linkBuilder.append(args[i]+ " ");
                         }
                         note.addField("Links:", linkBuilder.toString(), true);
@@ -147,6 +175,20 @@ public class takeNote extends ListenerAdapter {
                             e.getChannel().sendMessage("h").queue();
                         }
                         e.getMessage().delete().queue();
+                        try {
+                            String noteId =  String.format("%s_%s-",authorBuilder.toString(), e.getAuthor().getId()).replace(" ", "");
+                            String notesId = noteId.replace("-", "");
+                            Database.set(e.getAuthor().getId(),"userId","notes", noteId, true );
+                            Database.set(notesId, "noteId", "title", titleBuilder.toString(), false);
+                            Database.set(notesId, "noteId", "questions",kqBuilder.toString(), false);
+                            Database.set(notesId, "noteId", "notes", notesBuilder.toString(), false);
+                            Database.set(notesId, "noteId", "summary", summaryBuilder.toString(), false);
+                            Database.set(notesId, "noteId", "attachments", images.toString(), false);
+                            Database.set(notesId, "noteId", "links", linkBuilder.toString(), false);
+
+
+                        } catch (InterruptedException | NullPointerException exception) {
+                        }
                         break;
 
                     case "c":
@@ -159,6 +201,24 @@ public class takeNote extends ListenerAdapter {
                         } catch (InterruptedException ex) {
                             throw new RuntimeException(ex);
                         }
+                        e.getMessage().delete().queue();
+                        break;
+
+                    case "notes":
+                        Document userDoc = Database.get(e.getAuthor().getId(), "userId");
+                        StringBuilder notesString = new StringBuilder();
+                        String userNotes[] =  userDoc.get("notes").toString().split("-");
+                        for(int i = 0; i < userNotes.length; i++){
+                            notesString.append(String.format("%s. `%s` \n", i + 1 ,userNotes[i].split("_")[0]));
+                        }
+
+
+                        EmbedBuilder notesBuilder = new EmbedBuilder()
+                                .setTitle("Notes:")
+                                .setDescription(notesString.toString());
+                        e.getMessage().replyEmbeds(notesBuilder.build())
+                                .mentionRepliedUser(false)
+                                .queue();
                         e.getMessage().delete().queue();
                         break;
                 }
