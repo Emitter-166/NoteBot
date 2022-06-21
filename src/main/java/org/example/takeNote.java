@@ -34,7 +34,7 @@ public class takeNote extends ListenerAdapter {
                                         "`a` **attachment** \n" +
                                         "`l` ** attachment link** \n" +
                                         "`i` **sets id of the note**" +
-                                        "`./` **to show the file** \n" +
+                                        "`./` **to show the note** \n" +
                                         "`c` **to clear current note** \n" +
                                         "`notes` **to see all the notes**").queue();
                         try {
@@ -152,7 +152,7 @@ public class takeNote extends ListenerAdapter {
                         //setting up links
                         linkBuilder = new StringBuilder();
                         for (int i = 2; i < args.length; i++) {
-                            linkBuilder.append(args[i]+ " ");
+                            linkBuilder.append(args[i]+ " \n");
                         }
                         note.addField("Links:", linkBuilder.toString(), true);
                         e.getChannel().sendMessage("`Link set!`").queue();
@@ -225,6 +225,34 @@ public class takeNote extends ListenerAdapter {
             }
 
 
+            if(args.length >= 3){
+                System.out.println("yes");
+                if(args[0].equalsIgnoreCase("n")){
+                    System.out.println("231");
+                    if(args[1].equalsIgnoreCase("./")){
+                        System.out.println("yes");
+                        //retrieving data from database
+                       try{
+                           Document embed = Database.get(String.format("%s_%s", args[2], e.getAuthor().getId()), "notes");
+                           EmbedBuilder builder = new EmbedBuilder()
+                                   .setAuthor(args[3])
+                                   .setTitle((String) embed.get("title"))
+                                   .addField("Questions/Keywords: ", String.format("```%s```", embed.get("questions")), false)
+                                   .addField("Notes: ", String.format("```%s```", embed.get("notes")), false)
+                                   .addField("Summary: ", String.format("```%s```", embed.get("summary")), false)
+                                   .addField("Links:", linkBuilder.toString(), true);
+                           e.getMessage().replyEmbeds(builder.build()).queue();
+                           e.getMessage().delete().queue();
+                           e.getChannel().sendMessage((String) embed.get("links")).queue();
+                       }catch (Exception exception){
+                       }
+
+
+
+                    }
+
+                }
+            }
 
         try{
             if (args[1].equalsIgnoreCase("set!`") || args[1].equalsIgnoreCase("cleared!`")) {
